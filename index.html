@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AquaMap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{--bg:#eaf4fa;--card:#fff;--ink:#062a47;--mute:#5a7b92;--line:#d3e5f0;--deep:#062a47;--tide:#0e7bb8;--lag:#2cb5c9;--amb:#f2a33a;--kelp:#19a974;--bad:#d6334f;--sh:0 10px 30px rgba(6,42,71,.10);--r:18px}
+@media(prefers-color-scheme:dark){:root{--bg:#051b2e;--card:#0b2c47;--ink:#e4f2fb;--mute:#8cb1c8;--line:#17415f;--sh:0 10px 30px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.6 'Be Vietnam Pro',system-ui,"Segoe UI",Roboto,sans-serif;background:radial-gradient(900px 420px at 95% 0,rgba(44,181,201,.16),transparent),var(--bg);color:var(--ink)}
+h1,h2,h3{font-weight:700;letter-spacing:-.3px}
+/* ---- Đầu trang ---- */
+.hero{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--deep),#0a4f7e 55%,var(--tide));color:#fff;padding:26px 24px 64px}
+.hero .wrap{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:14px}
+.brand svg{width:46px;height:46px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25))}
+.brand h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.8px;line-height:1.1}
+.brand p{margin:2px 0 0;opacity:.88;font-size:14px}
+.gxbtn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;font:inherit;font-weight:600;padding:9px 18px;border-radius:999px;cursor:pointer;transition:background .2s}
+.gxbtn:hover{background:rgba(255,255,255,.26)}
+.bub span{position:absolute;bottom:-60px;border-radius:50%;background:rgba(255,255,255,.1);animation:rise 14s linear infinite}
+@keyframes rise{to{transform:translateY(-330px);opacity:0}}
+.wave{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:46px;display:block}
+/* ---- Thanh tab ---- */
+nav.tabs{position:sticky;top:0;z-index:900;background:var(--bg)}
+nav.tabs .in{max-width:1180px;margin:auto;padding:10px 20px;display:flex;gap:8px;overflow-x:auto}
+nav.tabs button{border:0;background:var(--card);color:var(--mute);font:inherit;font-weight:600;padding:9px 18px;border-radius:999px;box-shadow:0 1px 4px rgba(6,42,71,.10);cursor:pointer;white-space:nowrap;transition:transform .15s}
+nav.tabs button:hover{transform:translateY(-1px)}
+nav.tabs button.on{background:linear-gradient(120deg,var(--tide),var(--lag));color:#fff;box-shadow:0 6px 16px rgba(14,123,184,.35)}
+main{max-width:1180px;margin:auto;padding:6px 20px 48px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--lag);outline-offset:2px}
+/* ---- Thẻ, nút, biểu mẫu ---- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 16px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;right:-18px;top:-18px;width:64px;height:64px;border-radius:50%;background:var(--c,var(--tide));opacity:.14}
+.stat b{display:block;font-size:30px;font-weight:800;line-height:1.1;color:var(--c,var(--tide))}
+.stat span{color:var(--mute);font-size:13px}
+.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:16px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+#map{height:640px;border-radius:var(--r);border:3px solid var(--card);box-shadow:var(--sh);z-index:0}
+@media(max-width:860px){#map{height:380px}}
+aside.card{max-height:640px;overflow:auto}
+.seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:none;color:var(--mute);font:inherit;font-weight:600;padding:9px;border-radius:9px;cursor:pointer}
+.seg button.on{background:linear-gradient(120deg,var(--tide),var(--lag));color:#fff;box-shadow:0 4px 12px rgba(14,123,184,.3)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.chk{display:block;font-size:14px;margin:8px 0}
+.it{border:1px solid var(--line);border-left:5px solid var(--amb);border-radius:12px;padding:10px 12px;margin-bottom:10px;cursor:pointer;background:var(--bg);transition:transform .15s,box-shadow .15s}
+.it:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(6,42,71,.12)}
+.it.ver{border-left-color:var(--tide)}.it.done{border-left-color:var(--kelp)}
+.it p{margin:4px 0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+small,.mute{color:var(--mute);font-size:13px}
+.chip{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;color:#fff;white-space:nowrap}
+.pend{background:var(--amb)}.ver{background:var(--tide)}.done{background:var(--kelp)}
+.mini,.btn{border:0;background:linear-gradient(120deg,var(--tide),var(--lag));color:#fff;font:inherit;font-weight:600;border-radius:10px;padding:7px 14px;cursor:pointer;box-shadow:0 4px 12px rgba(14,123,184,.28);transition:transform .15s}
+.btn{padding:11px 20px;border-radius:12px}
+.mini:hover,.btn:hover{transform:translateY(-1px)}
+.btn.alt,.mini.alt{background:var(--bg);color:var(--tide);border:1px solid var(--line);box-shadow:none}
+.mini:disabled,.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+label{display:block;font-weight:600;margin:12px 0 4px}
+select,textarea,input[type=number],input[type=tel]{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+textarea{min-height:72px;resize:vertical}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin:6px 0;cursor:pointer;font-weight:400}
+.opt:has(input:checked){border-color:var(--tide);background:rgba(14,123,184,.09)}
+.opt input{margin-top:5px}
+#prev{max-width:100%;max-height:150px;border-radius:12px;margin-top:8px;display:block}
+.pin{display:block;width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.pin.pend{background:var(--amb)}.pin.ver{background:var(--tide)}.pin.done{background:var(--kelp)}.pin.draft{background:var(--bad)}
+.pp{font-family:inherit}.pp img{max-width:200px;border-radius:8px;display:block;margin:6px 0}
+.note{font-size:13px;color:var(--mute);margin-top:12px}
+.cols2{display:grid;grid-template-columns:1fr 1.5fr;gap:16px}
+@media(max-width:860px){.cols2{grid-template-columns:1fr}}
+/* ---- Biểu đồ nước ---- */
+.plot{position:relative;height:200px;display:flex;align-items:flex-end;gap:12px;border-bottom:1px solid var(--line);margin-top:8px}
+.col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.bar{width:100%;max-width:50px;background:linear-gradient(var(--lag),var(--tide));border-radius:9px 9px 0 0}
+.bar.empty{background:none;border:2px dashed var(--line)}
+.avg{position:absolute;left:0;right:0;border-top:2px dashed var(--amb)}
+.avg span{position:absolute;right:0;top:-21px;font-size:12px;color:var(--amb);font-weight:600}
+.labs{display:flex;gap:12px}.labs small{flex:1;text-align:center}
+.big{font-size:42px;font-weight:800;line-height:1;color:var(--tide)}
+/* ---- Mẹo ---- */
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.tip{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.tip::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--lag)}
+.tip.hot::before{background:linear-gradient(var(--tide),var(--lag))}
+.tip.hot{background:linear-gradient(120deg,rgba(14,123,184,.10),var(--card) 60%)}
+.tip b{display:block;margin:2px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}
+.chips button{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;border-radius:999px;padding:5px 14px;cursor:pointer}
+.chips button.on{background:var(--tide);color:#fff;border-color:var(--tide)}
+/* ---- Báo cáo đã gửi ---- */
+.reps{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.thumb{max-width:160px;border-radius:10px;display:block;margin:6px 0}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.bd{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--bg);color:var(--mute);border:1px solid var(--line)}
+.bd.on{background:rgba(14,123,184,.12);color:var(--tide);border-color:var(--tide)}
+.steps{list-style:none;margin:14px 0 0;padding:0}
+.steps li{display:flex;gap:12px;position:relative;padding-bottom:14px}
+.steps li:last-child{padding-bottom:0}
+.steps li::before{content:'';position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--line)}
+.steps li:last-child::before{display:none}
+.dot{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);color:var(--mute);display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--card);z-index:1}
+.steps li.done .dot{background:var(--tide);border-color:var(--tide);color:#fff}
+.steps li.done::before{background:var(--tide)}
+.steps li.cur .dot{border-color:var(--tide);color:var(--tide);box-shadow:0 0 0 4px rgba(14,123,184,.2)}
+.steps li b{display:block;line-height:28px}
+.steps li small{display:block;margin-top:-4px}
+.demo{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* ---- Điểm Xanh ---- */
+.soon{text-align:center;padding:48px 20px;max-width:520px;margin:20px auto}
+.soon svg{width:78px;height:78px;margin-bottom:8px}
+.soon p{font-size:18px;color:var(--mute);margin:6px 0 0}
+/* ---- Hộp thoại ---- */
+.modal{position:fixed;inset:0;background:rgba(3,22,38,.58);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:16px}
+.modal[hidden]{display:none}
+.mbox{background:var(--card);color:var(--ink);border-radius:20px;padding:26px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.mbox.wide{max-width:470px;text-align:left;max-height:92vh;overflow:auto}
+.mbox h2{margin:4px 0 8px}
+.mbox .row{justify-content:center;flex-wrap:wrap;margin-top:14px}
+.tick{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--kelp),#5fd3a6);color:#fff;font-size:36px;line-height:68px;margin:0 auto 10px;box-shadow:0 8px 20px rgba(25,169,116,.4)}
+.mcode{font-weight:700;color:var(--tide);margin:8px 0 6px;font-size:18px;letter-spacing:.5px}
+.step{margin:14px 0}
+.locbox{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px;font-size:14px}
+.okc{color:var(--kelp);font-weight:600}.badc{color:var(--bad);font-weight:600}
+.warn{color:var(--bad);font-size:13px;min-height:20px;margin:6px 0 0}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--deep);color:#fff;padding:11px 20px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:20000;max-width:90vw;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#toast.on{opacity:1}
+@media(prefers-reduced-motion:reduce){#toast{transition:none}.bub span{animation:none}.it,.mini,.btn,nav.tabs button{transition:none}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="bub" aria-hidden="true"><span style="left:6%;width:46px;height:46px;animation-delay:0s"></span><span style="left:24%;width:22px;height:22px;animation-delay:3s"></span><span style="left:47%;width:60px;height:60px;animation-delay:6s"></span><span style="left:68%;width:28px;height:28px;animation-delay:2s"></span><span style="left:86%;width:40px;height:40px;animation-delay:8s"></span></div>
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fe8f5"/><stop offset="1" stop-color="#2cb5c9"/></linearGradient></defs><path d="M24 3C24 3 8 20 8 31a16 16 0 0 0 32 0C40 20 24 3 24 3z" fill="url(#lg)"/><path d="M14 32c3-3 6-3 10 0s7 3 10 0" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+      <div><h1>AquaMap</h1><p>Bản đồ cộng đồng về an toàn nguồn nước</p></div>
+    </div>
+    <button class="gxbtn" data-tab="gx">Điểm Xanh &amp; Voucher</button>
+  </div>
+  <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path style="fill:var(--bg)" d="M0 30C240 70 480 0 720 30s480 40 720 0V60H0z"/></svg>
+</header>
+<nav class="tabs" id="tabs"><div class="in">
+  <button class="on" data-tab="map">Bản đồ sự cố</button>
+  <button data-tab="mine">Báo cáo đã gửi</button>
+  <button data-tab="water">Nước trong tháng</button>
+  <button data-tab="tips">Mẹo tiết kiệm nước</button>
+</div></nav>
+<main>
+<section id="t-map">
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div id="map" aria-label="Bản đồ sự cố nước"></div>
+    <aside class="card">
+      <div class="seg"><button class="on" data-sub="list">Sự cố gần đây</button><button data-sub="new">Báo cáo mới</button></div>
+      <div id="p-list">
+        <div class="legend"><span><i class="pend"></i>Chưa xác minh</span><span><i class="ver"></i>Đã xác minh</span><span><i class="done"></i>Đã khắc phục</span></div>
+        <p class="note" style="margin:0 0 8px">Điểm tin cậy = bằng chứng của người báo + xác nhận của cư dân. Từ 2 điểm, báo cáo được chuyển cho đơn vị xử lý. Cảnh báo công khai cần 3 điểm; với nước đổi màu/mùi và xả thải cần thêm ít nhất 1 cư dân gần đó xác nhận.</p>
+        <label class="chk"><input type="checkbox" id="onlyV"> Chỉ hiện sự cố đã xác minh</label>
+        <div id="list"></div>
+      </div>
+      <form id="p-new" hidden>
+        <label for="ftype">Loại sự cố</label>
+        <select id="ftype"></select>
+        <label for="fdet">Bạn quan sát thấy gì?</label>
+        <select id="fdet"></select>
+        <label for="fdesc">Mô tả ngắn</label>
+        <textarea id="fdesc" maxlength="200" placeholder="Ví dụ: nước ngả vàng, có mùi tanh từ sáng nay"></textarea>
+        <label>Ảnh hiện trường</label>
+        <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn alt" id="cam">Chụp ảnh trực tiếp</button>
+          <button type="button" class="btn alt" id="pick">Chọn ảnh từ máy</button>
+        </div>
+        <input type="file" id="ffile" accept="image/jpeg,image/png,image/webp" hidden>
+        <input type="file" id="fcam" accept="image/*" capture="environment" hidden>
+        <img id="prev" alt="Ảnh xem trước" hidden>
+        <label>Vị trí</label>
+        <div class="row" style="justify-content:flex-start"><button type="button" class="btn alt" id="geo">Dùng vị trí hiện tại</button></div>
+        <p class="note" style="margin:6px 0 0">Cần cho phép quyền vị trí, và mở trang qua https hoặc localhost.</p>
+        <p class="mute" id="loc">Bấm lên bản đồ để chọn vị trí sự cố.</p>
+        <label class="chk"><input type="checkbox" id="blur" checked> Làm tròn vị trí để không lộ địa chỉ chính xác</label>
+        <div id="evbox" class="mute" style="margin:8px 0"></div>
+        <label>Thông tin liên hệ</label>
+        <label class="opt"><input type="radio" name="ct" value="anon" checked><span><b>Báo ẩn danh</b><br><small>Đơn vị xử lý không biết bạn là ai.</small></span></label>
+        <label class="opt"><input type="radio" name="ct" value="phone"><span><b>Để lại số điện thoại</b><br><small>Chỉ gửi cho đơn vị xử lý để liên hệ khi cần, không hiển thị công khai.</small></span></label>
+        <input type="tel" id="fphone" placeholder="Ví dụ 0912 345 678" autocomplete="tel" hidden>
+        <p style="margin:16px 0 0"><button class="btn" type="submit">Gửi báo cáo</button></p>
+      </form>
+    </aside>
+  </div>
+</section>
+
+<section id="t-mine" hidden>
+  <h2 style="margin-top:6px">Báo cáo đã gửi</h2>
+  <div class="reps" id="mine"></div>
+  <p class="note">Hai nút ở cuối mỗi báo cáo chỉ để mô phỏng phía cư dân và đơn vị xử lý khi trình bày. Ở bản thật các bước này do họ thực hiện.</p>
+</section>
+
+<section id="t-water" hidden>
+  <div class="cols2">
+    <div class="card">
+      <h2 style="margin-top:0">Nhập số nước tháng này</h2>
+      <label for="wppl">Số người trong nhà</label>
+      <input type="number" id="wppl" min="1" max="20" value="3">
+      <label for="wval">Lượng nước đã dùng (m³)</label>
+      <input type="number" id="wval" min="0" max="200" step="0.1" placeholder="Xem số trên đồng hồ hoặc hóa đơn">
+      <p style="margin-top:16px"><button class="btn" id="wsave">Lưu tháng này</button></p>
+      <p class="note">Chỉ cần một con số, không cần tải hóa đơn hay nhập thông tin cá nhân.</p>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">6 tháng gần nhất</h2>
+      <div class="plot" id="plot"></div>
+      <div class="labs" id="labs"></div>
+      <div id="wsum" style="margin-top:16px"></div>
+    </div>
+  </div>
+  <p class="note">Mức trung bình khu vực (4 m³/người/tháng) là số giả định. Số liệu 5 tháng trước là dữ liệu mẫu.</p>
+</section>
+
+<section id="t-tips" hidden>
+  <h2 style="margin-top:6px">Gợi ý cho bạn tháng này</h2>
+  <div class="tips" id="tipsHot"></div>
+  <h2>Tất cả mẹo</h2>
+  <div class="chips" id="tipChips"></div>
+  <div class="tips" id="tipsAll"></div>
+</section>
+
+<section id="t-gx" hidden>
+  <div class="card soon">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3C24 3 8 20 8 31a16 16 0 0 0 32 0C40 20 24 3 24 3z" fill="#2cb5c9" opacity=".25"/><path d="M24 14c-6 4-9 9-9 14a9 9 0 0 0 18 0c0-5-3-10-9-14z" fill="#19a974"/><path d="M24 20v14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+    <h2>Điểm Xanh và đổi voucher</h2>
+    <p>Tính năng đang được phát triển.</p>
+  </div>
+</section>
+</main>
+
+<div id="toast" role="status"></div>
+
+<div id="ok" class="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="okt">
+    <div class="tick">✓</div>
+    <h2 id="okt">Đã gửi thành công</h2>
+    <div class="mcode" id="okc"></div>
+    <p id="okp"></p>
+    <div class="row"><button class="btn alt" id="okx">Đóng</button><button class="btn" id="okv">Xem báo cáo đã gửi</button></div>
+  </div>
+</div>
+
+<div id="camm" class="modal" hidden>
+  <div class="mbox"><video id="vid" playsinline muted style="width:100%;border-radius:12px;background:#000"></video>
+    <div class="row"><button type="button" class="btn alt" id="camx">Hủy</button><button type="button" class="btn" id="snap">Chụp</button></div>
+  </div>
+</div>
+
+<div id="cfm" class="modal" hidden>
+  <div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="cfh">
+    <h2 id="cfh">Xác nhận bạn đã chứng kiến</h2>
+    <p class="mute" id="cfD"></p>
+    <div class="step"><b>1. Vị trí của bạn</b><div class="locbox" id="cfLoc"></div></div>
+    <div class="step"><b>2. Bạn gặp hoặc thấy sự cố này khi nào?</b><div id="cfQ1"></div></div>
+    <div class="step"><b id="cfQ2t"></b><div id="cfQ2"></div></div>
+    <p class="warn" id="cfMsg"></p>
+    <div class="row"><button type="button" class="btn alt" id="cfx">Hủy</button><button type="button" class="btn" id="cfok" disabled>Xác nhận</button></div>
+    <p class="note" style="text-align:center">Xác nhận sai nhiều lần có thể bị hạn chế quyền xác nhận.</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const TYPES={color:'Nước đổi màu/mùi',leak:'Rò rỉ / vỡ ống',cut:'Mất nước / nước yếu',waste:'Xả thải bất thường'};
+const DET={
+  color:[['vang','Vàng hoặc nâu'],['duc','Đục, có cặn'],['mui','Có mùi lạ (tanh, clo, hôi)'],['khac','Khác']],
+  leak:[['rigiot','Rỉ từng giọt'],['vet','Chảy thành vệt, ướt cả vùng'],['manh','Chảy mạnh, tràn ra đường'],['khac','Khác']],
+  cut:[['mat','Mất hẳn nước'],['yeu','Chảy rất yếu'],['chap','Lúc có lúc mất'],['khac','Khác']],
+  waste:[['den','Nước đen hoặc sẫm màu'],['bot','Nhiều bọt hoặc váng dầu'],['mui','Mùi hôi nồng'],['khac','Khác']]};
+const DQ={color:'Nước bạn thấy trông như thế nào?',leak:'Nước đang chảy ra sao?',cut:'Tình trạng nước bạn gặp là gì?',waste:'Nguồn thải bạn thấy trông thế nào?'};
+const HEALTH=new Set(['color','waste']);
+const KEY='aquamap-v4',TH=3,FWD=2,NEAR=300,AVG=4;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mAgo=n=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
+
+function seed(){
+  const R=(id,type,det,desc,lat,lng,c,f,d,t)=>({id,type,det,desc,lat,lng,confirms:c,ev:f?1:0,by:[],img:null,src:null,time:t,forwarded:f||(c+(f?1:0))>=FWD,proc:false,resolved:d,mine:false,contact:'anon'});
+  return{me:'u'+Math.random().toString(36).slice(2,8),people:3,nextId:100,
+    reports:[
+      R(1,'color','vang','Nước ngả vàng, có mùi tanh nhẹ từ sáng',21.0262,105.8005,4,true,false,'Hôm nay 07:30'),
+      R(2,'leak','vet','Ống nước hành lang tầng 2 rỉ thành vệt',21.0231,105.8043,3,true,false,'Hôm qua'),
+      R(3,'cut','yeu','Nước chảy rất yếu giờ cao điểm 6-7h sáng',21.0215,105.7985,1,false,false,'Hôm nay 06:50'),
+      R(4,'leak','manh','Vỡ ống ngoài ngõ, nước chảy ra lòng đường',21.0278,105.8030,5,true,true,'3 ngày trước'),
+      R(5,'waste','den','Nước thải đen chảy ra cống sau chợ',21.0198,105.8021,2,false,false,'Hôm qua'),
+      R(6,'color','duc','Nước đục có cặn sau khi khu bên đào đường',21.0248,105.7969,3,true,false,'2 ngày trước'),
+      R(7,'cut','mat','Mất nước đột ngột buổi chiều',21.0290,105.8000,0,false,false,'Hôm nay 15:10'),
+      R(8,'leak','rigiot','Đồng hồ nước chung bị rỉ',21.0222,105.8070,2,false,false,'Hôm nay 09:20'),
+      {id:9,type:'leak',det:'rigiot',desc:'Vòi nước chung ở sân sau rỉ liên tục',lat:21.0238,lng:105.7992,confirms:2,ev:1,by:[],img:null,src:null,time:'Hôm qua 18:05',forwarded:true,proc:true,resolved:false,mine:true,contact:'anon'},
+      {id:10,type:'cut',det:'yeu',desc:'Nước chảy rất yếu vào buổi sáng',lat:21.0256,lng:105.8052,confirms:0,ev:1,by:[],img:null,src:null,time:'Hôm nay 06:40',forwarded:false,proc:false,resolved:false,mine:true,contact:'0912345678'}],
+    water:{[mAgo(5)]:11,[mAgo(4)]:12,[mAgo(3)]:10,[mAgo(2)]:12,[mAgo(1)]:11}};
+}
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.reports)S=seed();
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S))}
+  catch(e){try{localStorage.setItem(KEY,JSON.stringify({...S,reports:S.reports.map(r=>({...r,img:null}))}))}catch(_){}}
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),3200)}
+
+/* ---------- Quy tắc tin cậy ---------- */
+const sc=r=>(r.ev||0)+r.confirms;                       /* điểm tin cậy */
+const pub=r=>sc(r)>=TH&&(!HEALTH.has(r.type)||r.confirms>=1); /* cảnh báo công khai */
+const code=r=>'AQ-'+String(r.id).padStart(4,'0');
+const stage=r=>r.resolved?3:(r.proc&&r.forwarded?2:(r.forwarded?1:0));
+const stCls=r=>r.resolved?'done':(pub(r)?'ver':'pend');
+const stTxt=r=>r.resolved?'Đã khắc phục':(r.proc&&r.forwarded?'Đang xử lý':(pub(r)?'Đã xác minh':(r.forwarded?'Chờ cư dân xác nhận':'Chờ kiểm chứng')));
+const canC=r=>!r.by.includes(S.me)&&!r.mine&&!r.resolved;
+const cBtn=r=>canC(r)?`<button class="mini" data-c="${r.id}">Xác nhận</button>`:`<small>${r.by.includes(S.me)?'Bạn đã xác nhận':r.mine?'Báo cáo của bạn':''}</small>`;
+const detLabel=r=>((DET[r.type]||[]).find(x=>x[0]===r.det)||[])[1]||'';
+const mask=p=>p.slice(0,4)+' *** '+p.slice(-3);
+const hashOf=s=>{let h=0;for(let i=0;i<s.length;i+=7)h=(h*31+s.charCodeAt(i))|0;return h};
+const dist=(a,b,c,d)=>{const t=x=>x*Math.PI/180,p=t(c-a),q=t(d-b),h=Math.sin(p/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(q/2)**2;return 12742000*Math.asin(Math.sqrt(h))};
+
+/* ---------- Bản đồ ---------- */
+const map=L.map('map').setView([21.0245,105.8010],15);
+const GOOGLE_MAPS_KEY=''; /* dán khóa Google Maps Platform vào đây để dùng bản đồ Google */
+const baseLayers={
+  'Đường phố (Esri)':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'}),
+  'OpenStreetMap':L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}),
+  'OpenStreetMap (HOT)':L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap, HOT'})
+};
+const defBase=()=>baseLayers['Đường phố (Esri)'];
+L.control.layers(baseLayers,null,{position:'topright'}).addTo(map);
+defBase().once('tileerror',()=>toast('Ô bản đồ không tải được. Thử đổi nguồn bản đồ ở góc trên bên phải.'));
+if(GOOGLE_MAPS_KEY){
+  fetch('https://tile.googleapis.com/v1/createSession?key='+GOOGLE_MAPS_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mapType:'roadmap',language:'vi',region:'VN'})})
+    .then(r=>r.ok?r.json():Promise.reject(r.status))
+    .then(j=>L.tileLayer('https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session='+j.session+'&key='+GOOGLE_MAPS_KEY,{maxZoom:19,attribution:'Map data &copy; Google'}).addTo(map))
+    .catch(()=>{defBase().addTo(map);toast('Không tải được Google Maps (kiểm tra khóa API và Map Tiles API), đang dùng bản đồ dự phòng.')});
+}else defBase().addTo(map);
+fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent('Phường Láng, Hà Nội, Việt Nam')+'&format=jsonv2&polygon_geojson=1&limit=5&accept-language=vi')
+  .then(r=>r.json())
+  .then(list=>{
+    const w=list.find(x=>x.geojson&&/Polygon/.test(x.geojson.type)&&x.display_name.normalize('NFC').toLowerCase().includes('láng'));
+    if(!w)return;
+    const ring=L.geoJSON(w.geojson,{style:{color:'#0e7bb8',weight:3,dashArray:'7 6',fillColor:'#0e7bb8',fillOpacity:.07}}).addTo(map);
+    ring.bindTooltip('Phường Láng',{sticky:true});
+    map.fitBounds(ring.getBounds(),{padding:[20,20]});
+  }).catch(()=>{});
+
+const markers={};let draft=null,sub='list';
+const icon=c=>L.divIcon({className:'',html:`<span class="pin ${c}"></span>`,iconSize:[22,22],iconAnchor:[11,22],popupAnchor:[0,-22]});
+const srcTxt=r=>r.src?(r.src==='camera'?'Chụp trực tiếp':'Ảnh chọn từ máy'):'';
+const popup=r=>`<div class="pp"><b>${TYPES[r.type]}</b> <span class="chip ${stCls(r)}">${stTxt(r)}</span>${r.img?`<img src="${r.img}" alt="Ảnh sự cố">`:''}${r.src?`<small>${srcTxt(r)}</small>`:''}<p>${esc(r.desc)}</p><small>Quan sát: ${esc(detLabel(r))}</small><br><small>Tin cậy ${sc(r)}/${TH} · ${r.confirms} xác nhận · ${esc(r.time)}</small><br><br>${cBtn(r)}</div>`;
+
+function render(){
+  const act=S.reports.filter(r=>!r.resolved);
+  $('#stats').innerHTML=[[act.length,'Sự cố đang mở','var(--amb)'],[act.filter(pub).length,'Đã xác minh','var(--tide)'],[act.filter(r=>r.proc&&r.forwarded).length,'Đang xử lý','var(--lag)'],[S.reports.length-act.length,'Đã khắc phục','var(--kelp)']].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
+  const only=$('#onlyV').checked;
+  S.reports.forEach(r=>{
+    let m=markers[r.id];
+    if(!m){m=markers[r.id]=L.marker([r.lat,r.lng],{icon:icon(stCls(r))}).addTo(map).bindPopup(()=>popup(r))}
+    else m.setIcon(icon(stCls(r)));
+  });
+  const list=S.reports.slice().sort((a,b)=>b.id-a.id).filter(r=>!only||pub(r)||r.resolved);
+  $('#list').innerHTML=list.length?list.map(r=>`<div class="it ${stCls(r)}" data-go="${r.id}"><div class="row"><b>${TYPES[r.type]}</b><span class="chip ${stCls(r)}">${stTxt(r)}</span></div><p>${esc(r.desc)}</p><div class="row"><small>Tin cậy ${sc(r)}/${TH} · ${r.confirms} xác nhận · ${esc(r.time)}</small>${cBtn(r)}</div></div>`).join(''):'<p class="mute">Chưa có sự cố nào đã xác minh. Hãy xác nhận một báo cáo để bắt đầu.</p>';
+}
+
+/* ---------- Xác nhận: vị trí + câu hỏi chứng kiến ---------- */
+let cf=null;
+function openConfirm(id){
+  const r=S.reports.find(x=>x.id===id);if(!r||!canC(r))return;
+  map.closePopup();
+  cf={id,near:null,d:null,busy:false,sim:false};
+  $('#cfD').textContent=TYPES[r.type]+': '+r.desc;
+  const opt=(n,v,t)=>`<label class="opt"><input type="radio" name="${n}" value="${v}"><span>${t}</span></label>`;
+  $('#cfQ1').innerHTML=[['1h','Trong 1 giờ qua'],['today','Trong hôm nay'],['3d','Trong 3 ngày qua'],['hear','Tôi không trực tiếp chứng kiến (nghe kể lại)']].map(x=>opt('q1',x[0],x[1])).join('');
+  $('#cfQ2t').textContent='3. '+DQ[r.type];
+  $('#cfQ2').innerHTML=DET[r.type].map(x=>opt('q2',x[0],x[1])).join('')+opt('q2','none','Tôi không thấy sự cố này');
+  $('#cfm').hidden=false;
+  cfLocate();
+}
+function cfLocate(){
+  if(!window.isSecureContext||!navigator.geolocation){cf.busy=false;cf.near=null;cf.d=null;return cfLoc()}
+  cf.busy=true;cfLoc();
+  const r=S.reports.find(x=>x.id===cf.id);
+  navigator.geolocation.getCurrentPosition(p=>{
+    cf.busy=false;cf.sim=false;cf.d=dist(p.coords.latitude,p.coords.longitude,r.lat,r.lng);cf.near=cf.d<=NEAR;cfLoc();
+  },()=>{cf.busy=false;cf.near=null;cf.d=null;cfLoc()},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+}
+function cfLoc(){
+  const b=$('#cfLoc'),retry=' <button type="button" class="mini alt" id="cfretry">Thử lại</button>';
+  if(cf.busy)b.innerHTML='<span class="mute">Đang xác định vị trí...</span>';
+  else if(cf.sim)b.innerHTML='<b>Vị trí mô phỏng</b> (chỉ dùng khi trình bày): coi như bạn đang ở gần sự cố.';
+  else if(cf.d!=null)b.innerHTML=`Bạn cách sự cố khoảng <b>${cf.d<1000?Math.round(cf.d)+' m':(cf.d/1000).toFixed(1)+' km'}</b>. ${cf.near?'<span class="okc">Đủ gần để xác nhận.</span>':'<span class="badc">Quá xa, cần ở trong bán kính '+NEAR+' m.</span>'}`+retry;
+  else b.innerHTML='Không lấy được vị trí. Hãy cho phép quyền vị trí và mở trang qua https hoặc localhost.'+retry+' <button type="button" class="mini alt" id="cfsim">Mô phỏng: coi như tôi ở gần</button>';
+  cfCheck();
+}
+function cfCheck(){
+  const g=n=>(document.querySelector(`[name=${n}]:checked`)||{}).value;
+  const q1=g('q1'),q2=g('q2');let m='';
+  if(cf.near===false)m='Bạn cần ở gần sự cố (trong bán kính '+NEAR+' m) mới xác nhận được.';
+  else if(cf.near==null)m='Cần xác định vị trí của bạn trước.';
+  else if(q1==='hear')m='Chỉ người trực tiếp chứng kiến mới xác nhận được.';
+  else if(q2==='none')m='Nếu bạn không thấy sự cố này thì không xác nhận. Cảm ơn bạn đã trả lời.';
+  else if(!q1||!q2)m='Hãy trả lời cả hai câu hỏi.';
+  $('#cfMsg').textContent=m;$('#cfok').disabled=!!m;
+}
+function submitConfirm(){
+  const r=S.reports.find(x=>x.id===cf.id);if(!r||!canC(r))return;
+  const a=document.querySelector('[name=q2]:checked').value;
+  const match=!r.det||r.det==='khac'||a==='khac'||a===r.det;
+  r.by.push(S.me);
+  if(match){
+    const wasPub=pub(r),was=sc(r);r.confirms++;if(was<FWD&&sc(r)>=FWD)r.forwarded=true;
+    toast(!wasPub&&pub(r)?'Cảm ơn bạn! Cảnh báo đã được xác minh công khai.':'Đã ghi nhận xác nhận của bạn.');
+  }else{
+    r.diff=(r.diff||0)+1;
+    toast('Đã ghi nhận ý kiến của bạn. Mô tả khác với báo cáo gốc nên chưa tính vào điểm tin cậy.');
+  }
+  save();$('#cfm').hidden=true;render();mine();
+}
+$('#cfx').onclick=()=>{$('#cfm').hidden=true};
+$('#cfok').onclick=submitConfirm;
+$('#cfm').addEventListener('change',cfCheck);
+
+/* ---------- Báo cáo mới ---------- */
+function setDraft(ll,g){
+  gps=!!g;
+  if(draft)draft.setLatLng(ll);
+  else{draft=L.marker(ll,{icon:icon('draft'),draggable:true}).addTo(map);draft.on('dragend',()=>{gps=false;showLoc()})}
+  showLoc();
+}
+function pos(){const p=draft.getLatLng();const d=$('#blur').checked?3:5;return[+p.lat.toFixed(d),+p.lng.toFixed(d)]}
+function showLoc(){evUpdate();if(!draft)return;const[a,b]=pos();$('#loc').textContent=`Đã chọn: ${a}, ${b}${$('#blur').checked?' (đã làm tròn)':''}`}
+map.on('click',e=>{if(sub==='new')setDraft(e.latlng)});
+$('#blur').onchange=showLoc;
+$('#geo').onclick=()=>{
+  if(!window.isSecureContext)return toast('Định vị chỉ hoạt động khi mở trang bằng https hoặc localhost, không phải mở trực tiếp file.');
+  if(!navigator.geolocation)return toast('Trình duyệt không hỗ trợ định vị');
+  const b=$('#geo');b.disabled=true;b.textContent='Đang lấy vị trí...';
+  const done=()=>{b.disabled=false;b.textContent='Dùng vị trí hiện tại'};
+  navigator.geolocation.getCurrentPosition(
+    p=>{done();const ll={lat:p.coords.latitude,lng:p.coords.longitude};setDraft(ll,true);map.setView(ll,17)},
+    er=>{done();toast(er.code===1?'Bạn đã từ chối quyền vị trí. Hãy cho phép trong cài đặt trình duyệt hoặc bấm lên bản đồ.':er.code===3?'Lấy vị trí quá lâu, hãy thử lại hoặc bấm lên bản đồ.':'Không lấy được vị trí. Hãy bấm lên bản đồ để chọn.')},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+};
+$('#ftype').innerHTML=Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+function fillDet(){$('#fdet').innerHTML='<option value="">Chọn điều bạn quan sát</option>'+DET[$('#ftype').value].map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}
+$('#ftype').onchange=fillDet;fillDet();
+document.querySelectorAll('[name=ct]').forEach(x=>x.onchange=()=>{$('#fphone').hidden=document.querySelector('[name=ct]:checked').value!=='phone'});
+
+let img=null,gps=false,psrc=null;
+const evScore=()=>(img?1:0)+(psrc==='camera'?1:0)+(draft&&gps?1:0);
+function evUpdate(){
+  const ck=(ok,t)=>`<div>${ok?'✓':'○'} ${t}</div>`;
+  $('#evbox').innerHTML=`<b>Điểm bằng chứng: ${evScore()}/${TH}</b>`+ck(!!img,'Có ảnh hiện trường')+ck(psrc==='camera','Chụp trực tiếp (xác minh được thời gian chụp)')+ck(!!(draft&&gps),'Vị trí lấy từ GPS thiết bị')+(psrc==='file'?'<small>Ảnh chọn từ máy không kiểm chứng được thời gian chụp nên không được cộng điểm này.</small>':'');
+}
+function setPhoto(im,source){
+  const w=im.videoWidth||im.width,h=im.videoHeight||im.height;
+  if(!w||!h){toast('Không đọc được ảnh, hãy thử lại');return false}
+  const k=Math.min(1,640/Math.max(w,h)),c=document.createElement('canvas');
+  c.width=w*k;c.height=h*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  const d=c.toDataURL('image/jpeg',.7);
+  if(S.reports.some(r=>r.img&&hashOf(r.img)===hashOf(d))){toast('Ảnh này đã được dùng cho một báo cáo khác. Hãy chụp ảnh mới.');return false}
+  img=d;psrc=source;$('#prev').src=img;$('#prev').hidden=false;evUpdate();return true;
+}
+function fromFile(f,live){
+  if(!f)return;
+  if(!/^image\//.test(f.type)||/gif|svg/.test(f.type))return toast('Chỉ nhận ảnh JPG, PNG hoặc WebP');
+  if(f.size>8*1024*1024)return toast('Ảnh quá lớn, hãy chọn ảnh dưới 8 MB');
+  const rd=new FileReader();
+  rd.onload=()=>{const im=new Image();im.onload=()=>{img=null;psrc=null;$('#prev').hidden=true;setPhoto(im,live&&Date.now()-f.lastModified<6e5?'camera':'file')};im.src=rd.result};
+  rd.readAsDataURL(f);
+}
+$('#ffile').onchange=e=>{fromFile(e.target.files[0],false);e.target.value=''};
+$('#fcam').onchange=e=>{fromFile(e.target.files[0],true);e.target.value=''};
+$('#pick').onclick=()=>$('#ffile').click();
+let stream=null;
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}$('#camm').hidden=true}
+$('#cam').onclick=async()=>{
+  if(!window.isSecureContext||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return $('#fcam').click();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    $('#vid').srcObject=stream;$('#camm').hidden=false;$('#vid').play();
+  }catch(e){toast('Không mở được camera, chuyển sang chọn ảnh chụp.');$('#fcam').click()}
+};
+$('#snap').onclick=()=>{if(setPhoto($('#vid'),'camera'))stopCam()};
+$('#camx').onclick=stopCam;
+
+$('#p-new').onsubmit=e=>{
+  e.preventDefault();
+  if(!draft)return toast('Hãy chọn vị trí sự cố trên bản đồ');
+  const det=$('#fdet').value;if(!det)return toast('Hãy chọn điều bạn quan sát được');
+  const desc=$('#fdesc').value.trim();if(!desc)return toast('Hãy mô tả ngắn sự cố');
+  let contact='anon';
+  if(document.querySelector('[name=ct]:checked').value==='phone'){
+    const ph=$('#fphone').value.replace(/[\s.-]/g,'');
+    if(!/^(0|\+84)\d{9}$/.test(ph))return toast('Số điện thoại chưa đúng định dạng (ví dụ 0912345678)');
+    contact=ph;
+  }
+  const[lat,lng]=pos();
+  const r={id:S.nextId++,type:$('#ftype').value,det,desc,lat,lng,confirms:0,ev:evScore(),by:[],img,src:psrc,time:'Vừa xong',forwarded:evScore()>=FWD,proc:false,resolved:false,mine:true,contact};
+  S.reports.push(r);save();
+  map.removeLayer(draft);draft=null;img=null;psrc=null;gps=false;e.target.reset();fillDet();$('#fphone').hidden=true;$('#prev').hidden=true;evUpdate();
+  $('#loc').textContent='Bấm lên bản đồ để chọn vị trí sự cố.';
+  setSub('list');render();mine();map.setView([lat,lng],17);
+  showOk(r);
+};
+function showOk(r){
+  $('#okc').textContent='Mã báo cáo: '+code(r);
+  const a=pub(r)?'Báo cáo đã được chuyển tới đơn vị xử lý và hiển thị là đã xác minh.':r.forwarded?'Báo cáo đã được chuyển tới đơn vị xử lý. Cảnh báo công khai cần thêm xác nhận của cư dân gần đó.':'Báo cáo đang chờ thêm bằng chứng hoặc xác nhận của cư dân để chuyển đi xử lý.';
+  $('#okp').textContent=a+' '+(r.contact==='anon'?'Bạn đang báo ẩn danh.':'Đơn vị xử lý có thể liên hệ qua số điện thoại bạn để lại.');
+  $('#ok').hidden=false;$('#okv').focus();
+}
+$('#okx').onclick=()=>{$('#ok').hidden=true};
+$('#okv').onclick=()=>{$('#ok').hidden=true;goTab('mine')};
+$('#ok').onclick=e=>{if(e.target.id==='ok')$('#ok').hidden=true};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#ok').hidden=true;$('#cfm').hidden=true;stopCam()}});
+function setSub(s){
+  sub=s;document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===s));
+  $('#p-list').hidden=s!=='list';$('#p-new').hidden=s!=='new';
+  if(s==='list'&&draft){map.removeLayer(draft);draft=null;gps=false;evUpdate()}
+}
+
+/* ---------- Báo cáo đã gửi ---------- */
+const STEPS=['Đã gửi','Đã chuyển đơn vị xử lý','Đang xử lý','Đã khắc phục'];
+const NOTE=r=>[`Báo cáo đã được ghi nhận. Cần đủ ${FWD} điểm để chuyển đơn vị xử lý (hiện ${sc(r)}/${FWD}).`,'Đã gửi tới ban quản lý hoặc đơn vị cấp nước. Chờ tiếp nhận.','Đơn vị xử lý đang kiểm tra và sửa chữa.','Sự cố đã được khắc phục. Cảm ơn bạn đã đóng góp!'];
+function mine(){
+  const L2=S.reports.filter(r=>r.mine).sort((a,b)=>b.id-a.id);
+  $('#mine').innerHTML=L2.length?L2.map(r=>{
+    const st=stage(r),nt=NOTE(r),fin=st===3;
+    const steps=STEPS.map((t,i)=>`<li class="${(i<st||fin)?'done':i===st?'cur':''}"><span class="dot">${(i<st||fin)?'✓':i+1}</span><div><b>${t}</b>${i===st?`<small>${nt[i]}</small>`:''}</div></li>`).join('');
+    return`<div class="card"><div class="row"><div><b>${TYPES[r.type]}</b> <small>· ${code(r)}</small></div><span class="chip ${stCls(r)}">${stTxt(r)}</span></div><p>${esc(r.desc)}</p>${r.img?`<img class="thumb" src="${r.img}" alt="Ảnh đã gửi">`:''}<small>${r.src?srcTxt(r)+' · ':''}Gửi lúc ${esc(r.time)} · Tin cậy ${sc(r)}/${TH} · ${r.confirms} xác nhận</small><br><small>${r.contact==='anon'?'Báo ẩn danh':'Liên hệ qua số '+mask(r.contact)}</small><div class="badges"><span class="bd ${r.forwarded?'on':''}">Đơn vị xử lý: ${r.forwarded?'đã nhận':'chưa nhận'}</span><span class="bd ${pub(r)?'on':''}">Cộng đồng: ${pub(r)?'đã xác minh':(r.forwarded?'chờ cư dân xác nhận':'chưa hiển thị')}</span></div><ol class="steps">${steps}</ol><div class="demo"><small>Mô phỏng:</small><button class="mini alt" data-dc="${r.id}">+1 xác nhận từ cư dân</button><button class="mini alt" data-dn="${r.id}">Đơn vị xử lý cập nhật</button></div></div>`}).join(''):'<p class="mute">Bạn chưa gửi báo cáo nào. Vào tab Bản đồ sự cố, chọn Báo cáo mới.</p>';
+}
+function demoC(id){
+  const r=S.reports.find(x=>x.id===id);if(!r)return;
+  r.confirms++;if(sc(r)>=FWD)r.forwarded=true;
+  save();render();mine();toast('Mô phỏng: một cư dân gần đó đã xác nhận');
+}
+function demoN(id){
+  const r=S.reports.find(x=>x.id===id);if(!r)return;
+  if(!r.forwarded)return toast('Báo cáo cần đủ '+FWD+' điểm để chuyển đơn vị xử lý. Bấm “+1 xác nhận từ cư dân” trước.');
+  if(!r.proc)r.proc=true;else if(!r.resolved)r.resolved=true;else return toast('Báo cáo này đã hoàn tất');
+  save();render();mine();
+}
+function goTab(k){
+  document.querySelectorAll('#tabs [data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===k));
+  ['map','mine','water','tips','gx'].forEach(x=>$('#t-'+x).hidden=x!==k);
+  if(k==='map')map.invalidateSize();if(k==='water')water();if(k==='tips')tips();if(k==='mine')mine();
+}
+
+/* ---------- Nước trong tháng ---------- */
+function waterState(){
+  const ks=Object.keys(S.water).sort(),last=S.water[ks.at(-1)],prev=ks.length>1?S.water[ks.at(-2)]:null;
+  if(prev&&last>=prev*1.3)return'spike';
+  return last>S.people*AVG?'above':'ok';
+}
+function water(){
+  const keys=[5,4,3,2,1,0].map(mAgo),vals=keys.map(k=>S.water[k]);
+  const avg=S.people*AVG,mx=Math.max(avg,...vals.filter(v=>v!=null))*1.2,H=150;
+  $('#wppl').value=S.people;
+  $('#plot').innerHTML=keys.map((k,i)=>{const v=vals[i];return`<div class="col"><small>${v==null?'':v}</small><div class="bar${v==null?' empty':''}" style="height:${v==null?24:Math.max(4,v/mx*H)}px"></div></div>`}).join('')+`<div class="avg" style="bottom:${avg/mx*H}px"><span>Trung bình khu vực: ${avg} m³</span></div>`;
+  $('#labs').innerHTML=keys.map(k=>`<small>T${+k.slice(5)}</small>`).join('');
+  const ks=Object.keys(S.water).sort(),last=S.water[ks.at(-1)],prev=ks.length>1?S.water[ks.at(-2)]:null;
+  const st=waterState();
+  let h=`<div class="row"><div><div class="big">${last} m³</div><small>Tháng ${+ks.at(-1).slice(5)}</small></div>`;
+  if(prev!=null){const d=Math.round((last-prev)/prev*100);h+=`<div style="text-align:right"><b>${d>0?'+':''}${d}%</b><br><small>so với tháng trước</small></div>`}
+  h+='</div><p>';
+  if(st==='spike')h+='<b style="color:var(--bad)">Tăng bất thường.</b> Lượng nước tăng nhiều so với tháng trước, hãy kiểm tra rò rỉ trong nhà (xem tab Mẹo).';
+  else if(st==='above')h+=`<b style="color:var(--amb)">Cao hơn mức trung bình</b> của hộ ${S.people} người trong khu vực.`;
+  else h+='<b style="color:var(--kelp)">Ở mức tốt</b>, không vượt mức trung bình khu vực.';
+  $('#wsum').innerHTML=h+'</p>';
+}
+$('#wsave').onclick=()=>{
+  const v=parseFloat($('#wval').value),p=parseInt($('#wppl').value,10);
+  if(!(v>=0)||v>200)return toast('Nhập số m³ hợp lệ (0 đến 200)');
+  S.people=p>=1&&p<=20?p:3;S.water[mAgo(0)]=v;save();$('#wval').value='';
+  water();tips();toast('Đã lưu số nước tháng này');
+};
+
+/* ---------- Mẹo tiết kiệm nước ---------- */
+const TAGS={leak:'Phát hiện rò rỉ',habit:'Thói quen',cook:'Nấu ăn và giặt giũ',home:'Thiết bị và tái sử dụng',share:'Cùng cộng đồng'};
+const TIPS=[
+['leak','Thử công tơ khi không dùng nước','Tắt hết vòi, ghi số công tơ, chờ 1-2 giờ rồi xem lại. Nếu số vẫn nhích, nhà có thể đang rò ngầm.'],
+['leak','Sửa vòi rỉ sớm','Vòi nhỏ giọt hay ống nối lỏng tưởng nhỏ nhưng chảy suốt ngày đêm. Thay gioăng hoặc khóa chặt là xong.'],
+['leak','Kiểm tra bồn cầu','Nhỏ vài giọt màu thực phẩm vào bể chứa. Nếu màu loang xuống bồn mà chưa xả, van hoặc phao đang rò.'],
+['habit','Tắt vòi khi đánh răng, xà phòng tay','Chỉ mở vòi khi cần xả. Thói quen nhỏ nhưng lặp lại mỗi ngày.'],
+['habit','Rút ngắn thời gian tắm','Hứng nước lạnh lúc chờ nước nóng vào xô để dùng lại.'],
+['cook','Gom đồ rồi mới giặt máy','Giặt đủ mẻ thay vì giặt nhiều lần ít đồ.'],
+['cook','Rửa rau, vo gạo trong chậu','Không để vòi chảy liên tục. Nước vo gạo dùng để tưới cây.'],
+['home','Dùng lại nước sinh hoạt','Nước giặt cuối, nước rửa rau có thể dùng lau nhà, xả bồn cầu, tưới cây.'],
+['home','Lắp đầu vòi tiết kiệm nước','Bộ sục khí gắn đầu vòi giảm lượng nước chảy mà vẫn đủ rửa, chi phí thấp.'],
+['share','Rủ bạn cùng phòng, hàng xóm','Cùng ghi số công tơ cuối tháng, ai giảm được thì chia sẻ cách làm.']];
+let tf='all';
+const tipHtml=(t,h)=>`<div class="tip${h?' hot':''}"><small>${TAGS[t[0]]}</small><b>${t[1]}</b>${t[2]}</div>`;
+function tips(){
+  const st=waterState(),want=st==='spike'?['leak','habit']:st==='above'?['habit','home','cook']:['share','habit'];
+  $('#tipsHot').innerHTML=TIPS.filter(t=>want.includes(t[0])).slice(0,4).map(t=>tipHtml(t,1)).join('');
+  $('#tipChips').innerHTML=[['all','Tất cả'],...Object.entries(TAGS)].map(([k,v])=>`<button data-tf="${k}" class="${tf===k?'on':''}">${v}</button>`).join('');
+  $('#tipsAll').innerHTML=TIPS.filter(t=>tf==='all'||t[0]===tf).map(t=>tipHtml(t)).join('');
+}
+
+/* ---------- Sự kiện chung ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.id==='cfretry')return cfLocate();
+  if(e.target.id==='cfsim'){cf.sim=true;cf.near=true;return cfLoc()}
+  const c=e.target.closest('[data-c]');if(c){e.stopPropagation();return openConfirm(+c.dataset.c)}
+  const g=e.target.closest('[data-go]');
+  if(g){const r=S.reports.find(x=>x.id===+g.dataset.go);if(r){map.setView([r.lat,r.lng],17);markers[r.id].openPopup()}return}
+  const dc=e.target.closest('[data-dc]');if(dc)return demoC(+dc.dataset.dc);
+  const dn=e.target.closest('[data-dn]');if(dn)return demoN(+dn.dataset.dn);
+  const t=e.target.closest('[data-tab]');if(t)return goTab(t.dataset.tab);
+  const s=e.target.closest('[data-sub]');if(s)return setSub(s.dataset.sub);
+  const f=e.target.closest('[data-tf]');if(f){tf=f.dataset.tf;tips()}
+});
+$('#onlyV').onchange=render;
+render();water();tips();evUpdate();mine();
+</script>
+</body>
+</html>
