@@ -442,28 +442,28 @@ const $=s=>document.querySelector(s);
 const TEXT={
  topbar:'AquaMap - Bản đồ cộng đồng về an toàn nguồn nước',
  heroTitle:'Thấy sự cố nước?<br>Báo cho cả khu cùng biết',
- heroSub:'Báo cáo sự cố về nguồn nước trên địa bàn Phường Láng, Thành phố Hà Nội. Vỡ ống nước, nước đổi màu...? Chỉ mất vài phút để báo cáo và theo dõi tiến độ xử lí!',
+ heroSub:'Vỡ ống nước, nước đổi màu...? Chỉ mất vài phút để báo cáo và theo dõi tiến độ xử lí!',
  howTitle:'Cách thức hoạt động',
- howLead:'Chỉ ba bước là sự cố của bạn được ghi nhận và theo dõi.',
+ howLead:'Sự cố của bạn được ghi nhận và theo dõi như thế nào?',
  how1t:'Báo cáo sự cố',
- how1d:'Chụp ảnh hoặc quay video, ghi địa chỉ và vài dòng mô tả. Nếu không muốn để lại tên, bạn có thể báo ẩn danh.',
- how2t:'Hàng xóm xác nhận',
- how2d:'Những người ở gần nơi xảy ra sự cố xác nhận mình cũng thấy, để thông tin đáng tin hơn.',
+ how1d:'Chụp ảnh hoặc quay video, ghi địa chỉ và mô tả ngắn gọn. Gửi báo cáo ẩn danh nếu bạn không muốn để lộ danh tính.',
+ how2t:'Xác thực cộng đồng',
+ how2d:'Những người cùng chứng kiến sự cố đưa ra xác nhận nhằm tăng độ tin cây của thông tin.',
  how3t:'Theo dõi tiến độ',
- how3d:'Bạn biết báo cáo đã được chuyển đi chưa, đang được xử lý hay đã xong.',
+ how3d:'Cập nhật về trạng thái của báo cáo: Đã gửi/Đã chuyển đến đơn vị xử lý/Đang xử lý/Đã khắc phục.',
  latestTitle:'Sự cố mới nhất',
  mapTitle:'Sự cố đã được báo cáo',
- mapLead:'Đây là những sự cố bà con trong phường đã báo. Bấm vào ghim để xem chi tiết, và nếu bạn cũng đang gặp thì hãy xác nhận giúp nhé.',
+ mapLead:'Đây là những sự cố bà con trong phường đã báo, bấm vào ghim để xem chi tiết. Nếu bạn cũng chứng kiến thì hãy đưa ra xác nhận nhé!',
  scoreNote:'Mỗi báo cáo có một điểm tin cậy: ảnh hoặc video, vị trí GPS và xác nhận của hàng xóm đều được cộng điểm. Đủ 2 điểm thì báo cáo được chuyển cho đơn vị xử lý, đủ 3 điểm thì hiện là “Đã xác minh”. Riêng nước đổi màu/mùi và xả thải cần thêm ít nhất 1 người ở gần xác nhận.',
  mineTitle:'Báo cáo của tôi',
  mineLead:'Những báo cáo bạn đã gửi từ thiết bị này, kèm tiến độ xử lý của từng báo cáo.',
- waterTitle:'Nước trong tháng',
+ waterTitle:'Lượng nước sử dụng',
  waterLead:'Ghi lại số nước mỗi tháng để biết nhà mình dùng nhiều hay ít. Bạn không cần tạo tài khoản.',
  tipsTitle:'Mẹo tiết kiệm nước',
  guideTitle:'Hướng dẫn báo cáo sự cố',
- guideLead:'Chỉ khoảng một phút là bạn gửi xong một báo cáo.',
+ guideLead:'Chỉ mất khoảng một phút để bạn gửi đi một báo cáo.',
  aboutTitle:'Về chúng tôi',
- aboutBody:'<p>AquaMap là dự án của nhóm sinh viên Trường Đại học Ngoại thương, thực hiện trong học phần Tư duy thiết kế và Đổi mới sáng tạo.</p><p><b>Mục tiêu của chúng mình</b> rất đơn giản: để người dân phường Láng báo sự cố nước nhanh hơn, biết báo cáo của mình đang được xử lý tới đâu, và dần có thói quen dùng nước tiết kiệm hơn.</p>'
+ aboutBody:'<p>AquaMap là dự án của nhóm sinh viên Trường Đại học Ngoại thương, thực hiện trong khuôn khổ học phần Tư duy thiết kế và Đổi mới sáng tạo.</p><p><b>Mục tiêu của chúng mình</b> rất đơn giản: giúp người dân trong khu vực phường Láng báo sự cố nước nhanh hơn, biết báo cáo của mình đang được xử lý tới đâu, và dần hình thành thói quen sử dụng nước tiết kiệm hơn.</p>'
 };
 document.querySelectorAll('[data-t]').forEach(el=>{const v=TEXT[el.dataset.t];if(v!=null)el.innerHTML=v});
 const TYPES={color:'Nước đổi màu/mùi',leak:'Rò rỉ / vỡ ống',cut:'Mất nước / nước yếu',waste:'Xả thải bất thường'};
@@ -558,7 +558,7 @@ const itemHtml=(r,btn)=>`<div class="it s-${stCls(r)}" data-go="${r.id}"><div cl
 function render(){
   const act=S.reports.filter(r=>!r.resolved);
   $('#stats').innerHTML=[[act.length,'Sự cố đang mở','var(--amb)'],[act.filter(pub).length,'Đã xác minh','var(--blue)'],[act.filter(r=>r.proc&&r.forwarded).length,'Đang xử lý','var(--cyan)'],[S.reports.length-act.length,'Đã khắc phục','var(--kelp)']].map(x=>`<div class="stat" style="--c:${x[2]}"><b>${x[0]}</b><span>${x[1]}</span></div>`).join('');
-  $('#hTrust').textContent=`Hiện có ${act.length} sự cố đang mở trong khu, trong đó ${act.filter(pub).length} sự cố đã được xác minh.`;
+  $('#hTrust').textContent=`Hiện có ${act.length} sự cố đang diễn ra trong khu vực, trong đó ${act.filter(pub).length} sự cố đã được xác minh.`;
   S.reports.forEach(r=>{
     let m=markers[r.id];
     if(!m){m=markers[r.id]=L.marker([r.lat,r.lng],{icon:icon(stCls(r))}).addTo(map).bindPopup(()=>popup(r))}
