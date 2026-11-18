@@ -270,7 +270,7 @@ textarea{min-height:80px;resize:vertical}
   <h2 class="h2" style="margin-top:6px" data-t="mineTitle"></h2>
   <p class="lead" data-t="mineLead"></p>
   <div class="reps" id="mine"></div>
-  <p class="note">Hai nút ở cuối mỗi báo cáo chỉ để mô phỏng phía cư dân và đơn vị xử lý khi trình bày. Ở bản thật các bước này do họ thực hiện.</p>
+  <p class="note">Đây là giao diện mô phỏng.</p>
 </section>
 
 <section id="t-water" hidden>
@@ -353,7 +353,7 @@ textarea{min-height:80px;resize:vertical}
   <div class="mbox wide" role="dialog" aria-modal="true" aria-labelledby="gdh">
     <button class="x" id="gdx" aria-label="Đóng">×</button>
     <h2 id="gdh">Hướng dẫn báo cáo sự cố</h2>
-    <p class="mute" style="margin:0">Đọc nhanh trước khi báo cáo (khoảng 1 phút).</p>
+    <p class="mute" style="margin:0">Các bước báo cáo một sự cố:</p>
     <div id="gdBody"></div>
     <label class="chk"><input type="checkbox" id="gdskip"> Lần sau không hiện hướng dẫn này khi bấm Báo cáo sự cố</label>
     <div class="row"><button class="btn alt" id="gdlater" type="button">Để sau</button><button class="cta" id="gdok" type="button">Tôi đã hiểu, bắt đầu báo cáo</button></div>
@@ -372,13 +372,13 @@ textarea{min-height:80px;resize:vertical}
         <div><label for="fname">Họ và tên</label><input type="text" id="fname" maxlength="60" autocomplete="name" placeholder="Để trống nếu muốn báo ẩn danh"></div>
         <div><label for="fphone">Số điện thoại</label><input type="tel" id="fphone" autocomplete="tel" placeholder="Ví dụ 0912 345 678"></div>
       </div>
-      <p class="note">Thông tin liên hệ chỉ gửi cho đơn vị xử lý để liên hệ khi cần, không hiển thị công khai.</p>
+      <p class="note">Thông tin liên hệ chỉ được gửi đến đơn vị xử lý để liên hệ khi cần thiết, không hiển thị công khai.</p>
       <h3 class="sec">2. Địa điểm sự cố *</h3>
       <label for="faddr">Địa chỉ sự cố *</label>
       <input type="text" id="faddr" maxlength="160" placeholder="Số nhà, ngõ, đường, tòa nhà... (phường Láng)">
       <div class="row" style="justify-content:flex-start;margin-top:8px"><button type="button" class="btn alt" id="geo">Dùng vị trí hiện tại</button></div>
       <p class="mute" id="loc" style="margin:6px 0 0"></p>
-      <p class="note" style="margin:4px 0 0">Địa chỉ chính xác chỉ gửi cho đơn vị xử lý. Bản đồ công khai chỉ hiển thị vị trí gần đúng (làm tròn khoảng 100 m).</p>
+      <p class="note" style="margin:4px 0 0">Địa chỉ chính xác chỉ gửi đến đơn vị xử lý. Bản đồ công khai chỉ hiển thị vị trí gần đúng (làm tròn khoảng 100 m).</p>
       <h3 class="sec">3. Mô tả sự cố *</h3>
       <div class="two">
         <div><label for="ftype">Loại sự cố *</label><select id="ftype"></select></div>
@@ -442,7 +442,7 @@ const $=s=>document.querySelector(s);
 const TEXT={
  topbar:'AquaMap - Bản đồ cộng đồng về an toàn nguồn nước',
  heroTitle:'Thấy sự cố nước?<br>Báo cho cả khu cùng biết',
- heroSub:'Ống rò rỉ, nước đổi màu hay mất nước bất thường ở phường Láng, chỉ vài phút là báo được. Hàng xóm xác nhận, còn bạn theo dõi cho tới khi sự cố được xử lý xong.',
+ heroSub:'Báo cáo sự cố về nguồn nước trên địa bàn Phường Láng, Thành phố Hà Nội. Vỡ ống nước, nước đổi màu...? Chỉ mất vài phút để báo cáo và theo dõi tiến độ xử lí!',
  howTitle:'Cách thức hoạt động',
  howLead:'Chỉ ba bước là sự cố của bạn được ghi nhận và theo dõi.',
  how1t:'Báo cáo sự cố',
