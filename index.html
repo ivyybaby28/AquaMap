@@ -386,7 +386,7 @@ textarea{min-height:80px;resize:vertical}
       </div>
       <label for="fdesc">Mô tả chi tiết *</label>
       <textarea id="fdesc" maxlength="300" placeholder="Xảy ra từ khi nào, ở đâu, mức độ ra sao..."></textarea>
-      <h3 class="sec">4. Ảnh hoặc video minh chứng <small>(nên có)</small></h3>
+      <h3 class="sec">4. Ảnh hoặc video minh chứng <small>(bắt buộc)</small></h3>
       <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">
         <button type="button" class="btn alt" id="cam">Chụp ảnh</button>
         <button type="button" class="btn alt" id="rec">Quay video</button>
@@ -750,6 +750,7 @@ $('#rpf').onsubmit=async e=>{
   if(addr.length<5)return toast('Hãy nhập địa chỉ sự cố (bắt buộc)');
   const det=$('#fdet').value;if(!det)return toast('Hãy chọn điều bạn quan sát được');
   const desc=$('#fdesc').value.trim();if(!desc)return toast('Hãy mô tả chi tiết sự cố');
+  if(!img)return toast('Vui lòng đính kèm ảnh hoặc video minh chứng trước khi gửi');
   const name=$('#fname').value.trim();
   let phone=$('#fphone').value.replace(/[\s.-]/g,'');
   if(phone&&!/^(0|\+84)\d{9}$/.test(phone))return toast('Số điện thoại chưa đúng định dạng (ví dụ 0912345678)');
