@@ -783,8 +783,8 @@ $('#ok').onclick=e=>{if(e.target.id==='ok')$('#ok').hidden=true};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){['ok','cfm','gd','rp'].forEach(i=>$('#'+i).hidden=true);stopCam()}});
 
 /* ---------- Báo cáo của tôi ---------- */
-const STEPS=['Đã gửi','Đã chuyển đơn vị xử lý','Đang xử lý','Đã khắc phục'];
-const NOTE=r=>[`Báo cáo đã được ghi nhận. Cần đủ ${FWD} điểm để chuyển đơn vị xử lý (hiện ${sc(r)}/${FWD}).`,'Đã gửi tới ban quản lý hoặc đơn vị cấp nước. Chờ tiếp nhận.','Đơn vị xử lý đang kiểm tra và sửa chữa.','Sự cố đã được khắc phục. Cảm ơn bạn đã đóng góp!'];
+const STEPS=['Đã gửi','Đã chuyển đến đơn vị xử lý','Đang xử lý','Đã khắc phục'];
+const NOTE=r=>[`Báo cáo đã được ghi nhận. Cần đủ ${FWD} điểm để chuyển đến đơn vị xử lý (hiện ${sc(r)}/${FWD}).`,'Đã gửi tới ban quản lý hoặc đơn vị cấp nước. Chờ tiếp nhận.','Đơn vị xử lý đang kiểm tra và sửa chữa.','Sự cố đã được khắc phục. Cảm ơn bạn đã đóng góp!'];
 function mine(){
   const L2=S.reports.filter(r=>r.mine).sort((a,b)=>b.id-a.id);
   $('#mine').innerHTML=L2.length?L2.map(r=>{
@@ -800,7 +800,7 @@ function demoC(id){
 }
 function demoN(id){
   const r=S.reports.find(x=>x.id===id);if(!r)return;
-  if(!r.forwarded)return toast('Báo cáo cần đủ '+FWD+' điểm để chuyển đơn vị xử lý. Bấm “+1 xác nhận từ cư dân” trước.');
+  if(!r.forwarded)return toast('Báo cáo cần đủ '+FWD+' điểm để chuyển đến đơn vị xử lý. Bấm “+1 xác nhận từ cư dân” trước.');
   if(!r.proc)r.proc=true;else if(!r.resolved)r.resolved=true;else return toast('Báo cáo này đã hoàn tất');
   save();render();mine();
 }
