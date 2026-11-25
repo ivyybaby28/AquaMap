@@ -434,8 +434,13 @@ textarea{min-height:80px;resize:vertical}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const $=s=>document.querySelector(s);
+const SUPABASE_URL = 'https://ibbeqldulobwomhlvfxb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_w9f12rNe2PjK5zcGNQGnAg_GrdgGDii';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ===== NỘI DUNG CHỮ DỄ SỬA =====
    Muốn đổi câu chữ, chỉ sửa phần nằm giữa hai dấu nháy đơn ' ' của từng dòng bên dưới.
    Xuống dòng dùng <br>, in đậm dùng <b>chữ</b>. Không dùng dấu nháy đơn thẳng ' bên trong câu (dùng ’ nếu cần). */
